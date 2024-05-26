@@ -1,21 +1,31 @@
 const http = require('http');
-const app = require('./app');
 const mongoose = require('mongoose');
+const app = require('./app');
+const loadDrugs = require('./utils/loadDrugs');
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3100;
 
 const server = http.createServer(app);
 
-server.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-});
-
-// Connect to MongoDB
 mongoose.connect('mongodb://localhost:27017/ddi-checker', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-}).then(() => {
+})
+.then(async () => {
     console.log('Connected to MongoDB');
-}).catch(err => {
+
+    // Load drugs on startup
+    try {
+        await loadDrugs();
+        console.log('Drugs loaded on startup');
+    } catch (error) {
+        console.error('Error loading drugs:', error);
+    }
+
+    server.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+    });
+})
+.catch(err => {
     console.error('MongoDB connection error:', err);
 });

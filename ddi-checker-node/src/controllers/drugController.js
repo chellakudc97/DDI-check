@@ -9,29 +9,36 @@ exports.getDrugs = async (req, res) => {
     }
 };
 
-exports.checkInteraction = async (req, res) => {
+exports.getAllDrugs = async (req, res) => {
     try {
-        const { drugs } = req.body;
-        const interactions = await Drug.find({
-            name: { $in: drugs }
-        }).populate('interactions.drug', 'name');
+        const drugs = await Drug.find();
+        res.json(drugs);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 
-        const result = interactions.reduce((acc, drug) => {
-            drug.interactions.forEach(interaction => {
-                if (drugs.includes(interaction.drug.name)) {
-                    acc.push({
-                        drug1: drug.name,
-                        drug2: interaction.drug.name,
-                        interaction: interaction.interaction,
-                        severity: interaction.severity,
-                        source: interaction.source,
-                    });
-                }
-            });
-            return acc;
-        }, []);
+exports.checkInteraction = async (req, res) => {
+    const { drug1, drug2 } = req.body;
 
-        res.json(result);
+    try {
+        const drugs = await Drug.find();
+        let interaction = null;
+
+        for (let drug of drugs) {
+            interaction = drug.interactions.find(
+                interaction => 
+                    (interaction.object === drug1 && interaction.precipitant === drug2) ||
+                    (interaction.object === drug2 && interaction.precipitant === drug1)
+            );
+            if (interaction) break; // If interaction is found, break the loop
+        }
+        console.log(interaction);
+        if (interaction) {
+            res.json({ label: interaction.label });
+        } else {
+            res.json({ label: "No special interaction known" });
+        }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

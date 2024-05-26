@@ -1,3 +1,4 @@
+// models/User.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -10,6 +11,8 @@ const userSchema = new mongoose.Schema({
     SVNR: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    assignedPhysicians: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Only for patients
+    drugs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Drug' }] // Only for patients
 });
 
 userSchema.pre('save', async function(next) {
